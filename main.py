@@ -9,7 +9,6 @@ all_sprites = pg.sprite.Group() #i use the group to manage all the sprites and i
 all_sprites.add(player)
 
 while True:
-    
     for event in pg.event.get():
         if event.type == pg.QUIT:
             pg.quit()
@@ -18,13 +17,14 @@ while True:
             if event.key == pg.K_ESCAPE:
                 pg.quit()
                 exit()
-    keys = pg.key.get_pressed() #i get the keys pressed to move the player
+
+    keys = pg.key.get_pressed()
     all_sprites.update(keys)
-    #here i draw the background and the player
-    screen.fill((0, 0, 0))
-    all_sprites.draw(screen)    
 
+    #draw everything
+    screen.fill((0, 0, 0))       #clear screen
+    player.draw(screen)         #draw player + shield
 
-    pg.display.update()
-    clock.tick(60)
+    pg.display.flip()           #update full display
+    clock.tick(60)              #cap to 60 FPS
     
