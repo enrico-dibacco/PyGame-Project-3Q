@@ -104,4 +104,7 @@ class Player(pygame.sprite.Sprite):
         angle_deg = -math.degrees(self.shield_angle)-90
         rotated_shield = pygame.transform.rotate(self.shield_image, angle_deg)
         shield_rect = rotated_shield.get_rect(center=(shield_x, shield_y))
+        shrink_factor = 0.6
+        shield_rect.inflate_ip(-shield_rect.width * (1 - shrink_factor), -shield_rect.height * (1 - shrink_factor))
+
         return shield_rect.colliderect(other_rect)
