@@ -1,53 +1,79 @@
-#i want to create a player that uses top down approach movement
-import math
-
 import pygame
+import math
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos):
         super().__init__()
-        self.image = pygame.Surface((50, 50))
-        self.image.fill((255, 0, 0))
+
+        player_scale = 3
+        sword_scale = 0.1
+
+        walk1 = pygame.image.load("assets/walk1.png").convert_alpha()
+        walk2 = pygame.image.load("assets/walk2.png").convert_alpha()
+        walk1 = pygame.transform.scale(walk1, (int(walk1.get_width() * player_scale), int(walk1.get_height() * player_scale)))
+        walk2 = pygame.transform.scale(walk2, (int(walk2.get_width() * player_scale), int(walk2.get_height() * player_scale)))
+        self.walk_images_left = [walk1, walk2]
+        self.walk_images_right = [pygame.transform.flip(img, True, False) for img in self.walk_images_left]
+
+        idle = pygame.image.load("assets/idle.png").convert_alpha()
+        idle = pygame.transform.scale(idle, (int(idle.get_width() * player_scale), int(idle.get_height() * player_scale)))
+        self.idle_image_left = idle
+        self.idle_image_right = pygame.transform.flip(idle, True, False)
+
+        self.image = self.idle_image_left
         self.rect = self.image.get_rect(center=pos)
+
         self.speed = 5
+        self.direction = "left"
+        self.current_frame = 0
+        self.last_update_time = pygame.time.get_ticks()
+        self.animation_interval = 200
 
-
-
-        #shield logic
-
-        self.shield_image = pygame.Surface((20, 60), pygame.SRCALPHA)
-        pygame.draw.rect(self.shield_image, (0, 255, 255), (0, 0, 20, 60))
-        self.shield_radius = 80
+        shield = pygame.image.load("assets/shield.png").convert_alpha()
+        shield = pygame.transform.scale(shield, (int(shield.get_width() * sword_scale), int(shield.get_height() * sword_scale)))
+        self.shield_image = shield
+        self.shield_radius = 90
         self.shield_angle = 0
+
     def update(self, keys):
-        dx = 0 #here im calculating the displacement in each of the 2 directions
-        dy = 0
-        if keys[pygame.K_w]:
-            dy = -self.speed
-        if keys[pygame.K_s]:
-            dy = self.speed
+        dx = dy = 0
+        if keys[pygame.K_w]: dy -= self.speed
+        if keys[pygame.K_s]: dy += self.speed
         if keys[pygame.K_a]:
-            dx = -self.speed
+            dx -= self.speed
+            self.direction = "left"
         if keys[pygame.K_d]:
-            dx = self.speed
+            dx += self.speed
+            self.direction = "right"
+
         self.rect.x += dx
         self.rect.y += dy
-       
-        mouse_x, mouse_y = pygame.mouse.get_pos()
-        px, py = self.rect.center
-        self.shield_angle = math.atan2(mouse_y - py, mouse_x - px)
-    def draw(self, surface):
-        
-        surface.blit(self.image, self.rect)
 
-        
+        moving = dx != 0 or dy != 0
+
+        if moving:
+            now = pygame.time.get_ticks()
+            if now - self.last_update_time > self.animation_interval:
+                self.current_frame = (self.current_frame + 1) % 2
+                self.last_update_time = now
+
+            if self.direction == "right":
+                self.image = self.walk_images_right[self.current_frame]
+            else:
+                self.image = self.walk_images_left[self.current_frame]
+        else:
+            self.image = self.idle_image_right if self.direction == "right" else self.idle_image_left
+
+        mx, my = pygame.mouse.get_pos()
         px, py = self.rect.center
-        angle_deg = -math.degrees(self.shield_angle) + 90
+        self.shield_angle = math.atan2(my - py, mx - px)
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+        px, py = self.rect.center
         shield_x = px + self.shield_radius * math.cos(self.shield_angle)
         shield_y = py + self.shield_radius * math.sin(self.shield_angle)
-        #here i compute the radius at which the shield will be drawn 
-        
+        angle_deg = -math.degrees(self.shield_angle)-90
         rotated_shield = pygame.transform.rotate(self.shield_image, angle_deg)
         shield_rect = rotated_shield.get_rect(center=(shield_x, shield_y))
         surface.blit(rotated_shield, shield_rect)
-        

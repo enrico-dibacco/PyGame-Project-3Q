@@ -22,7 +22,7 @@ while True:
     all_sprites.update(keys)
 
     #draw everything
-    screen.fill((0, 0, 0))       #clear screen
+    screen.fill((255, 255, 255))       #clear screen
     player.draw(screen)         #draw player + shield
 
     pg.display.flip()           #update full display
