@@ -1,5 +1,7 @@
 import pygame
 import math
+import random
+from enemy import Enemy
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos):
@@ -31,9 +33,12 @@ class Player(pygame.sprite.Sprite):
 
         shield = pygame.image.load("assets/shield.png").convert_alpha()
         shield = pygame.transform.scale(shield, (int(shield.get_width() * sword_scale), int(shield.get_height() * sword_scale)))
+        self.shield_base_image = shield
         self.shield_image = shield
-        self.shield_radius = 90
+        self.shield_radius = 80
         self.shield_angle = 0
+
+        self.swing_timer = 0
 
     def update(self, keys):
         dx = dy = 0
@@ -68,6 +73,20 @@ class Player(pygame.sprite.Sprite):
         px, py = self.rect.center
         self.shield_angle = math.atan2(my - py, mx - px)
 
+        if self.swing_timer > 0:
+            self.swing_timer -= 1
+            scale = 1.3
+            scaled = pygame.transform.scale(
+                self.shield_base_image,
+                (
+                    int(self.shield_base_image.get_width() * scale),
+                    int(self.shield_base_image.get_height() * scale)
+                )
+            )
+            self.shield_image = scaled
+        else:
+            self.shield_image = self.shield_base_image
+
     def draw(self, surface):
         surface.blit(self.image, self.rect)
         px, py = self.rect.center
@@ -77,3 +96,12 @@ class Player(pygame.sprite.Sprite):
         rotated_shield = pygame.transform.rotate(self.shield_image, angle_deg)
         shield_rect = rotated_shield.get_rect(center=(shield_x, shield_y))
         surface.blit(rotated_shield, shield_rect)
+
+    def shield_collides(self, other_rect):
+        px, py = self.rect.center
+        shield_x = px + self.shield_radius * math.cos(self.shield_angle)
+        shield_y = py + self.shield_radius * math.sin(self.shield_angle)
+        angle_deg = -math.degrees(self.shield_angle)-90
+        rotated_shield = pygame.transform.rotate(self.shield_image, angle_deg)
+        shield_rect = rotated_shield.get_rect(center=(shield_x, shield_y))
+        return shield_rect.colliderect(other_rect)
