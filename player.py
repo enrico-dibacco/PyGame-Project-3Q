@@ -39,7 +39,7 @@ class Player(pygame.sprite.Sprite):
         self.shield_angle = 0
 
         self.swing_timer = 0
-
+        self.health = 100
     def update(self, keys):
         dx = dy = 0
         if keys[pygame.K_w]: dy -= self.speed
@@ -105,3 +105,13 @@ class Player(pygame.sprite.Sprite):
         rotated_shield = pygame.transform.rotate(self.shield_image, angle_deg)
         shield_rect = rotated_shield.get_rect(center=(shield_x, shield_y))
         return shield_rect.colliderect(other_rect)
+
+    def player_collide(self, other_rect):
+        return self.rect.colliderect(other_rect)
+
+    def healthManager(self, dmg = 0, healing = 0):
+        self.health -=  dmg
+        self.health += healing
+        if self.health <= 0:
+            print("dead")
+            #handle gameover here

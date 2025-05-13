@@ -52,7 +52,16 @@ while True:
             if player.shield_collides(enemy.rect):
                 enemy.kill()
 
+    for enemy in enemy_group:
+        if player.player_collide(enemy.rect):
+            player.healthManager(10)
+            
+            enemy.kill()
+           
+                
+
     screen.fill((255, 255, 255))
     player.draw(screen)
     enemy_group.draw(screen)
     pg.display.flip()
+
