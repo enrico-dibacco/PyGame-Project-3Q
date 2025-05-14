@@ -23,6 +23,14 @@ spawn_timer = 0
 SPAWN_INTERVAL = 1500
 
 original_death_sound = pg.mixer.Sound("sfx/death.wav")
+def play_sound(soundname, volume=0.5, loop=False):
+    sound = pg.mixer.Sound(f"{soundname}")
+    sound.set_volume(volume)
+    if loop:
+        sound.play(-1)
+    else:
+        sound.play()
+    
 
 def play_random_pitch(sound, pitch_range=(0.95, 1.05)):
     pitch = np.random.uniform(*pitch_range)
@@ -38,7 +46,7 @@ def play_random_pitch(sound, pitch_range=(0.95, 1.05)):
     stereo_arr = np.column_stack((arr, arr))  # duplicate mono into stereo
     sound_variant = pg.sndarray.make_sound(stereo_arr)
     sound_variant.play()
-
+play_sound("music/bossphaseone.wav", 0.1, True)
 while True:
     dt = clock.tick(60)
     spawn_timer += dt
