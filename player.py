@@ -38,6 +38,7 @@ class Player(pygame.sprite.Sprite):
         self.shield_radius = 80
         self.shield_angle = 0
 
+        self.health = 100
         self.swing_timer = 0
 
     def update(self, keys):
@@ -50,9 +51,12 @@ class Player(pygame.sprite.Sprite):
         if keys[pygame.K_d]:
             dx += self.speed
             self.direction = "right"
-
+        
         self.rect.x += dx
         self.rect.y += dy
+
+        
+        
 
         moving = dx != 0 or dy != 0
 
@@ -108,3 +112,5 @@ class Player(pygame.sprite.Sprite):
         shield_rect.inflate_ip(-shield_rect.width * (1 - shrink_factor), -shield_rect.height * (1 - shrink_factor))
 
         return shield_rect.colliderect(other_rect)
+    def player_collides(self, other_rect):
+        return self.rect.colliderect(other_rect)
