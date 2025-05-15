@@ -7,11 +7,15 @@ import random
 import numpy as np
 from healthbar import HealthBar
 
-pg.mixer.pre_init(frequency=44100, size=-16, channels=2)  # stereo-safe
+pg.mixer.pre_init(frequency=44100, size=-16, channels=2)  # stereo-safe (if not boom boom the stereo)
 pg.init()
 
 screen = pg.display.set_mode((1920, 1080))
-score = Score("fonts/munro.ttf", font_size=80, color=(0, 0, 0), position=(1500, 150))  
+score = Score("fonts/munro.ttf", font_size=80, color=(0, 0, 0), position=(1500, 150))
+
+background = pg.image.load("envrioment/rockfloor.png").convert()
+background = pg.transform.scale(background, (1920, 1080))
+
 
 clock = pg.time.Clock()
 healthb = HealthBar(300, 300, 200, 20, 100)
@@ -97,7 +101,8 @@ while True:
                 pg.quit()
                 exit() 
     
-    screen.fill((255, 255, 255))
+    screen.blit(background, (0, 0))
+
     
     player.draw(screen)
     enemy_group.draw(screen)
