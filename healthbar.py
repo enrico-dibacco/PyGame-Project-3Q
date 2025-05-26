@@ -11,6 +11,7 @@ class HealthBar:
 
     def draw(self, screen):
         ratio = self.current_health / self.max_health
+        pygame.draw.rect(screen,(0,0,0),(self.x-10,self.y-10,self.w+20,self.h+20))
         pygame.draw.rect(screen, (255, 0, 0), (self.x, self.y, self.w, self.h))
         pygame.draw.rect(screen, (0, 255, 0), (self.x, self.y, self.w * ratio, self.h))
         

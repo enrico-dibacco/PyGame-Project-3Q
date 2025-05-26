@@ -18,7 +18,7 @@ class Enemy(pg.sprite.Sprite):
                 pg.image.load("mageanimation/mage1.png").convert_alpha(),
                 pg.image.load("mageanimation/mage2.png").convert_alpha()
             ]
-            self.frames = [pg.transform.scale(f, (50, 50)) for f in self.frames]
+            self.frames = [pg.transform.scale(f, (100, 100)) for f in self.frames]
         else:
             # Load standard enemy animation
             self.frames = [
