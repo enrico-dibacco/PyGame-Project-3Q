@@ -13,12 +13,14 @@ class Enemy(pg.sprite.Sprite):
         self.knockback_distance = 100
 
         if self.is_special:
-            # Just a plain blue square
-            surface = pg.Surface((30, 30))
-            surface.fill((0, 0, 255))
-            self.frames = [surface]
+            # Load special mage animation
+            self.frames = [
+                pg.image.load("mageanimation/mage1.png").convert_alpha(),
+                pg.image.load("mageanimation/mage2.png").convert_alpha()
+            ]
+            self.frames = [pg.transform.scale(f, (50, 50)) for f in self.frames]
         else:
-            # Load animated frames from image files
+            # Load standard enemy animation
             self.frames = [
                 pg.image.load("batanimation/enemy1.png").convert_alpha(),
                 pg.image.load("batanimation/enemy2.png").convert_alpha(),
@@ -46,15 +48,14 @@ class Enemy(pg.sprite.Sprite):
 
         self.knockback_timer = 0
 
-        # Animation (used only for non-special enemies)
+        # Animation
         self.anim_index = 0
         self.anim_direction = 1
         self.anim_timer = 0
         self.anim_speed = 10
 
     def update(self):
-        if not self.is_special:
-            self.animate()
+        self.animate()
 
         if self.state == "approaching":
             self.move_toward_player()
@@ -72,9 +73,9 @@ class Enemy(pg.sprite.Sprite):
             self.anim_timer = 0
             self.anim_index += self.anim_direction
 
-            if self.anim_index == 2:
+            if self.anim_index >= len(self.frames) - 1:
                 self.anim_direction = -1
-            elif self.anim_index == 0:
+            elif self.anim_index <= 0:
                 self.anim_direction = 1
 
             self.image = self.frames[self.anim_index]

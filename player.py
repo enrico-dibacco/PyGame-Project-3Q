@@ -91,15 +91,18 @@ class Player(pygame.sprite.Sprite):
         else:
             self.shield_image = self.shield_base_image
 
-    def draw(self, surface):
-        surface.blit(self.image, self.rect)
-        px, py = self.rect.center
+    def draw(self, surface, offset=(0, 0)):
+        x_off, y_off = offset
+        rect = self.rect.move(x_off, y_off)
+        surface.blit(self.image, rect)
+        px, py = rect.center
         shield_x = px + self.shield_radius * math.cos(self.shield_angle)
         shield_y = py + self.shield_radius * math.sin(self.shield_angle)
-        angle_deg = -math.degrees(self.shield_angle)-90
+        angle_deg = -math.degrees(self.shield_angle) - 90
         rotated_shield = pygame.transform.rotate(self.shield_image, angle_deg)
         shield_rect = rotated_shield.get_rect(center=(shield_x, shield_y))
         surface.blit(rotated_shield, shield_rect)
+
 
     def shield_collides(self, other_rect):
         px, py = self.rect.center
