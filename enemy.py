@@ -3,7 +3,7 @@ import random
 import math
 
 class Enemy(pg.sprite.Sprite):
-    def __init__(self, screen_width, screen_height, player, is_special=False):
+    def __init__(self, x, y, player, is_special=False):
         super().__init__()
 
         self.player = player
@@ -13,14 +13,12 @@ class Enemy(pg.sprite.Sprite):
         self.knockback_distance = 100
 
         if self.is_special:
-            # Load special mage animation
             self.frames = [
                 pg.image.load("mageanimation/mage1.png").convert_alpha(),
                 pg.image.load("mageanimation/mage2.png").convert_alpha()
             ]
             self.frames = [pg.transform.scale(f, (100, 100)) for f in self.frames]
         else:
-            # Load standard enemy animation
             self.frames = [
                 pg.image.load("batanimation/enemy1.png").convert_alpha(),
                 pg.image.load("batanimation/enemy2.png").convert_alpha(),
@@ -30,29 +28,14 @@ class Enemy(pg.sprite.Sprite):
 
         self.image = self.frames[0]
         self.rect = self.image.get_rect()
-
-        # Spawn enemy randomly on screen edge
-        edge = random.choice(["top", "bottom", "left", "right"])
-        if edge == "top":
-            self.rect.centerx = random.randint(0, screen_width)
-            self.rect.top = 0
-        elif edge == "bottom":
-            self.rect.centerx = random.randint(0, screen_width)
-            self.rect.bottom = screen_height
-        elif edge == "left":
-            self.rect.left = 0
-            self.rect.centery = random.randint(0, screen_height)
-        elif edge == "right":
-            self.rect.right = screen_width
-            self.rect.centery = random.randint(0, screen_height)
+        self.rect.center = (x, y)  
 
         self.knockback_timer = 0
-
-        # Animation
         self.anim_index = 0
         self.anim_direction = 1
         self.anim_timer = 0
         self.anim_speed = 10
+
 
     def update(self):
         self.animate()
