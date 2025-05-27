@@ -8,6 +8,7 @@ from enemy import Enemy
 from score import Score
 from healthbar import HealthBar
 from fireball import Fireball
+from potion import Potion  # <-- pozioni!
 
 class Particle(pg.sprite.Sprite):
     def __init__(self, pos):
@@ -38,9 +39,12 @@ all_sprites = pg.sprite.Group(player)
 enemy_group = pg.sprite.Group()
 fireballs = pg.sprite.Group()
 particles = pg.sprite.Group()
+potions = pg.sprite.Group()
 
 spawn_timer = 0
+potion_timer = 0
 SPAWN_INTERVAL = 1500
+POTION_INTERVAL = 10000
 FIREBALL_COOLDOWN = 1000
 last_fireball_time = 0
 
@@ -52,6 +56,7 @@ fireball_images = [
 original_death_sound = pg.mixer.Sound("sfx/death.wav")
 knockback_sound = pg.mixer.Sound("sfx/knockback.wav")
 blipSelect_sound = pg.mixer.Sound("sfx/blipSelect.wav")
+powerup_sound = pg.mixer.Sound("sfx/powerup.wav")
 
 shake_timer = 0
 shake_magnitude = 8
@@ -64,13 +69,9 @@ music_volume = 0.1
 sfx_volume = 0.5
 font = pg.font.Font("fonts/munro.ttf", 36)
 
-def play_sound(soundname, volume=0.5, loop=False):
-    sound = pg.mixer.Sound(f"{soundname}")
-    sound.set_volume(volume)
-    if loop:
-        sound.play(-1)
-    else:
-        sound.play()
+pg.mixer.music.load("music/bossphaseone.wav")
+pg.mixer.music.set_volume(music_volume)
+pg.mixer.music.play(-1)
 
 def play_random_pitch(sound, pitch_range=(0.95, 1.05)):
     pitch = np.random.uniform(*pitch_range)
@@ -95,13 +96,14 @@ def spawn_particles(pos, count=10):
     for _ in range(count):
         particles.add(Particle(pos))
 
-pg.mixer.music.load("music/bossphaseone.wav")
-pg.mixer.music.set_volume(music_volume)
-pg.mixer.music.play(-1)
+def spawn_potion():
+    kind = random.choice(["speed", "multiplier", "nuke"])
+    potions.add(Potion(kind))
 
 while True:
     dt = clock.tick(60)
     spawn_timer += dt
+    potion_timer += dt
 
     for event in pg.event.get():
         if event.type == pg.QUIT or (event.type == pg.KEYDOWN and (event.key == pg.K_ESCAPE or event.key == pg.K_TAB)):
@@ -140,6 +142,7 @@ while True:
         fireballs.update()
         enemy_group.update()
         particles.update()
+        potions.update()
         enemy_projectiles.update()
 
         if spawn_timer >= SPAWN_INTERVAL:
@@ -148,12 +151,16 @@ while True:
             enemy_group.add(enemy)
             spawn_timer = 0
 
+        if potion_timer >= POTION_INTERVAL:
+            spawn_potion()
+            potion_timer = 0
+
         for fireball in fireballs:
             for enemy in enemy_group:
                 if fireball.rect.colliderect(enemy.rect):
                     spawn_particles(enemy.rect.center)
                     enemy.kill()
-                    score.add(50)
+                    score.add(50 if not hasattr(score, 'multiplier') else 50 * score.multiplier)
                     fireball.kill()
                     play_random_pitch(original_death_sound)
                     shake_timer = 8
@@ -163,7 +170,7 @@ while True:
                 if player.shield_collides(enemy.rect):
                     spawn_particles(enemy.rect.center)
                     enemy.kill()
-                    score.add(100)
+                    score.add(100 if not hasattr(score, 'multiplier') else 100 * score.multiplier)
                     play_random_pitch(original_death_sound)
                     shake_timer = 8
 
@@ -171,7 +178,7 @@ while True:
             for enemy in enemy_group:
                 if enemy.state == "approaching" and enemy.is_special:
                     if player.shield_collides(enemy.rect):
-                        score.add(50)
+                        score.add(50 if not hasattr(score, 'multiplier') else 50 * score.multiplier)
                         enemy.knockback()
                         play_random_pitch(knockback_sound)
 
@@ -179,7 +186,7 @@ while True:
             if enemy.state == "vulnerable" and player.shield_collides(enemy.rect):
                 spawn_particles(enemy.rect.center)
                 enemy.kill()
-                score.add(100)
+                score.add(100 if not hasattr(score, 'multiplier') else 100 * score.multiplier)
                 play_random_pitch(original_death_sound)
                 shake_timer = 8
             if player.player_collides(enemy.rect):
@@ -204,6 +211,21 @@ while True:
                     pg.quit()
                     exit()
 
+        for potion in potions:
+            if player.rect.colliderect(potion.rect):
+                potion.apply_effect(player, score, enemy_group)
+                potion.kill()
+                play_random_pitch(powerup_sound)
+
+
+        now = pg.time.get_ticks()
+        if hasattr(player, 'speed_timer') and now - player.speed_timer > 30000:
+            player.speed = 5
+            del player.speed_timer
+        if hasattr(score, 'multiplier_timer') and now - score.multiplier_timer > 30000:
+            del score.multiplier
+            del score.multiplier_timer
+
     if shake_timer > 0:
         shake_offset = (random.randint(-shake_magnitude, shake_magnitude), random.randint(-shake_magnitude, shake_magnitude))
         shake_timer -= 1
@@ -216,6 +238,7 @@ while True:
     enemy_group.draw(screen)
     particles.draw(screen)
     enemy_projectiles.draw(screen)
+    potions.draw(screen)
     healthb.draw(screen)
     score.draw(screen)
 
@@ -230,10 +253,9 @@ while True:
         screen.blit(music_text, (650, 340))
         screen.blit(sfx_text, (650, 380))
 
-        # Draw sliders
-        pg.draw.rect(screen, (100, 100, 100), (650, 375, 200, 10))  # music bg
+        pg.draw.rect(screen, (100, 100, 100), (650, 375, 200, 10))
         pg.draw.rect(screen, (160, 0, 160), (650, 375, int(music_volume * 200), 10))
-        pg.draw.rect(screen, (100, 100, 100), (650, 415, 200, 10))  # sfx bg
+        pg.draw.rect(screen, (100, 100, 100), (650, 415, 200, 10))
         pg.draw.rect(screen, (255, 100, 0), (650, 415, int(sfx_volume * 200), 10))
 
         controls_text = font.render("CONTROLS:", True, (0, 0, 0))
@@ -243,7 +265,7 @@ while True:
             "Q = Fireballs",
             "H = Toggle Settings",
             "Left/Right Arrows = Adjust Music Volume",
-            "Up/Down Arrows= Adjust SFX Volume"
+            "Up/Down Arrows = Adjust SFX Volume"
         ]
         screen.blit(controls_text, (650, 450))
         for i, line in enumerate(lines):
